@@ -3,10 +3,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { db } from "../utils/firebase/config"; 
+import { db } from "../utils/firebase/config";
+import { useAuth } from '../context/AuthContext';
 import CarCard from './CarCard';
 
 const CarList = () => {
+  const { user } = useAuth();
   // Stany komponentu
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);

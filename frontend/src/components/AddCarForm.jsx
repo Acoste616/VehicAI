@@ -6,7 +6,11 @@ import { collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firesto
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../utils/firebase/config'; // Import z konfiguracji Firebase
 
-const AddCarForm = () => {
+interface AddCarFormProps {
+  isEditing?: boolean;
+}
+
+const AddCarForm: React.FC<AddCarFormProps> = ({ isEditing = false }) => {
   // Stan formularza
   const [formData, setFormData] = useState({
     brand: '',

@@ -1,13 +1,27 @@
+// src/advisor/chatSteps.js
+
 /**
  * Sekwencja kroków rozmowy w doradcy VehicAI
  * Każdy krok definiuje jedno pytanie zadawane użytkownikowi
  */
 
+// Definicje opcji dla multiselect
+const availableBrands = [
+  'Audi', 'BMW', 'Ford', 'Honda', 'Hyundai', 'Kia', 'Mazda',
+  'Mercedes-Benz', 'Nissan', 'Opel', 'Peugeot', 'Renault', 'Skoda',
+  'Toyota', 'Volkswagen', 'Volvo', 'Inna' // Dodajemy 'Inna'
+];
+
+const availableBodyTypes = [
+  'Sedan', 'Hatchback', 'Kombi', 'SUV', 'Coupe', 'Kabriolet', 'Minivan', 'Pickup', 'Inny' // Dodajemy 'Inny'
+];
+
+
 export const chatSteps = [
     {
       id: 'purpose',
       label: 'W jakim celu kupujesz samochód?',
-      inputType: 'select',
+      inputType: 'select', // Pojedynczy wybór
       required: true,
       options: [
         { value: 'family', label: 'Dla rodziny' },
@@ -20,46 +34,26 @@ export const chatSteps = [
     },
     {
       id: 'budget',
-      label: 'Jaki masz budżet na samochód?',
+      label: 'Jaki masz maksymalny budżet na samochód?',
       inputType: 'price',
       required: true,
       hint: 'Podaj maksymalną kwotę w złotówkach'
     },
     {
       id: 'brand',
-      label: 'Czy masz preferowaną markę samochodu?',
-      inputType: 'select',
+      label: 'Czy masz preferowaną markę lub marki samochodu?',
+      inputType: 'multiselect-brand', // Zmieniony typ na multiselect
       required: false,
-      options: [
-        { value: 'any', label: 'Nie mam preferencji' },
-        { value: 'Audi', label: 'Audi' },
-        { value: 'BMW', label: 'BMW' },
-        { value: 'Ford', label: 'Ford' },
-        { value: 'Mercedes-Benz', label: 'Mercedes' },
-        { value: 'Opel', label: 'Opel' },
-        { value: 'Toyota', label: 'Toyota' },
-        { value: 'Volkswagen', label: 'Volkswagen' },
-        { value: 'Skoda', label: 'Skoda' },
-        { value: 'Renault', label: 'Renault' },
-        { value: 'other', label: 'Inna marka (wpisz w komentarzu)' }
-      ]
+      options: availableBrands.map(brand => ({ value: brand, label: brand })), // Mapujemy na format { value, label }
+      hint: 'Możesz wybrać kilka marek'
     },
     {
       id: 'bodyType',
       label: 'Jaki typ nadwozia Cię interesuje?',
-      inputType: 'select',
-      required: true,
-      options: [
-        { value: 'any', label: 'Dowolny' },
-        { value: 'sedan', label: 'Sedan' },
-        { value: 'hatchback', label: 'Hatchback' },
-        { value: 'kombi', label: 'Kombi' },
-        { value: 'suv', label: 'SUV/Crossover' },
-        { value: 'van', label: 'Van/Minivan' },
-        { value: 'coupe', label: 'Coupe' },
-        { value: 'kabriolet', label: 'Kabriolet' },
-        { value: 'pickup', label: 'Pickup' }
-      ]
+      inputType: 'multiselect-bodytype', // Zmieniony typ na multiselect
+      required: true, // Zazwyczaj typ nadwozia jest kluczowy
+      options: availableBodyTypes.map(type => ({ value: type.toLowerCase().replace(' ', '-'), label: type })), // Mapujemy na format { value, label }
+      hint: 'Możesz wybrać kilka typów nadwozia'
     },
     {
       id: 'minYear',
@@ -72,13 +66,13 @@ export const chatSteps = [
       id: 'maxMileage',
       label: 'Jaki maksymalny przebieg akceptujesz?',
       inputType: 'mileage',
-      required: false,
+      required: false, // Opcjonalne
       hint: 'Podaj maksymalny przebieg w kilometrach'
     },
     {
       id: 'fuelType',
       label: 'Jaki rodzaj paliwa preferujesz?',
-      inputType: 'select',
+      inputType: 'select', // Zostawiamy jako pojedynczy select, chyba że wymagany jest multi
       required: false,
       options: [
         { value: 'any', label: 'Bez znaczenia' },
@@ -92,7 +86,7 @@ export const chatSteps = [
     {
       id: 'transmission',
       label: 'Jaką skrzynię biegów preferujesz?',
-      inputType: 'select',
+      inputType: 'select', // Zostawiamy jako pojedynczy select
       required: false,
       options: [
         { value: 'any', label: 'Bez znaczenia' },
@@ -103,13 +97,13 @@ export const chatSteps = [
     {
       id: 'priority',
       label: 'Co jest dla Ciebie najważniejsze w samochodzie?',
-      inputType: 'select',
+      inputType: 'select', // Pojedynczy wybór priorytetu
       required: true,
       options: [
         { value: 'price', label: 'Niska cena' },
         { value: 'mileage', label: 'Niski przebieg' },
         { value: 'year', label: 'Nowszy rocznik' },
-        { value: 'brand', label: 'Konkretna marka' },
+        // { value: 'brand', label: 'Konkretna marka' }, // Usunięte, bo marka może być multi
         { value: 'fuelEconomy', label: 'Ekonomiczne spalanie' },
         { value: 'performance', label: 'Osiągi i dynamika' },
         { value: 'safety', label: 'Bezpieczeństwo' },
@@ -121,33 +115,40 @@ export const chatSteps = [
       id: 'additionalInfo',
       label: 'Czy masz dodatkowe preferencje lub wymagania?',
       inputType: 'text',
-      required: false,
-      hint: 'Np. konkretne wyposażenie, pojemność silnika, moc, liczba miejsc, itp.'
+      required: false, // Opcjonalne
+      hint: 'Np. kolor, konkretne wyposażenie, moc, liczba miejsc, itp.'
     }
   ];
-  
-  // Funkcja pomocnicza do pobrania kroku po ID
-  export const getStepById = (stepId) => {
-    return chatSteps.find(step => step.id === stepId);
-  };
-  
-  // Funkcja pomocnicza do znalezienia indeksu kroku po ID
-  export const getStepIndexById = (stepId) => {
-    return chatSteps.findIndex(step => step.id === stepId);
-  };
-  
-  // Funkcja zwracająca pierwszy krok
-  export const getFirstStep = () => {
-    return chatSteps[0];
-  };
-  
-  // Funkcja zwracająca następny krok
-  export const getNextStep = (currentStepId) => {
+
+// Funkcja pomocnicza do pobrania kroku po ID
+export const getStepById = (stepId) => {
+  return chatSteps.find(step => step.id === stepId);
+};
+
+// Funkcja pomocnicza do znalezienia indeksu kroku po ID
+export const getStepIndexById = (stepId) => {
+  return chatSteps.findIndex(step => step.id === stepId);
+};
+
+// Funkcja zwracająca pierwszy krok
+export const getFirstStep = () => {
+  return chatSteps[0];
+};
+
+// Funkcja zwracająca następny krok
+export const getNextStepLogic = (currentStepId, responses) => {
     const currentIndex = getStepIndexById(currentStepId);
     if (currentIndex === -1 || currentIndex >= chatSteps.length - 1) {
       return null; // Brak następnego kroku
     }
+    // Tutaj można dodać logikę warunkową, np. pomijanie kroku jeśli nie dotyczy
+    // Na razie prosta logika przejścia do następnego
     return chatSteps[currentIndex + 1];
-  };
-  
-  export default chatSteps;
+};
+
+// Modyfikacja funkcji w advisorEngine.js, aby używała tej logiki
+// W advisorEngine.js zmień wywołanie getNextStep na getNextStepLogic
+// export const getNextStep = (responses) => { ... } // stara wersja
+// export const getNextStep = (responses) => getNextStepLogic(Object.keys(responses).pop(), responses); // potencjalna nowa wersja w engine
+
+export default chatSteps;
