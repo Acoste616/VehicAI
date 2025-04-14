@@ -1,17 +1,14 @@
-// frontend/src/App.jsx
-import { Routes, Route } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import { Suspense, lazy, memo } from 'react';
-import ROUTES from './utils/routes';
-
-// Layout Components
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingSpinner from './components/LoadingSpinner';
+import ProtectedRoute from './components/ProtectedRoute';
+import ROUTES from './utils/routes';
 
-// Lazy load page components for better performance
+// Lazy load components for better performance
 const HomePage = lazy(() => import('./pages/HomePage'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
 const ListingDetails = lazy(() => import('./pages/ListingDetails'));
@@ -24,10 +21,15 @@ const RegisterForm = lazy(() => import('./components/auth/RegisterForm'));
 const ForgotPasswordForm = lazy(() => import('./components/auth/ForgotPasswordForm'));
 const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const UserDashboard = lazy(() => import('./pages/UserDashboard'));
+
+// Debugging Page - remove in production
+const DiagnosticPage = lazy(() => import('./pages/DiagnosticPage'));
 
 // Memoized layout components to prevent unnecessary re-renders
-const MemoizedNavbar = memo(Navbar);
-const MemoizedFooter = memo(Footer);
+const MemoizedNavbar = React.memo(Navbar);
+const MemoizedFooter = React.memo(Footer);
 
 function App() {
   return (
@@ -86,6 +88,20 @@ function App() {
                     </ProtectedRoute>
                   } 
                 />
+                
+                {/* Debug Route - Remove in Production */}
+                <Route path="/diagnostic" element={<DiagnosticPage />} />
+                
+                {/* Admin Routes */}
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <UserDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/admin" element={<AdminDashboard />} />
                 
                 {/* 404 Route */}
                 <Route path="*" element={<NotFoundPage />} />

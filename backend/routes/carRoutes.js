@@ -332,4 +332,48 @@ router.get('/user/listings', verifyToken, async (req, res) => {
   }
 });
 
+/**
+ * @route GET /cars/user/:userId
+ * @desc Get all car listings for a specific user
+ * @access Private - Requires authentication
+ */
+router.get('/user/:userId', [
+  verifyToken,
+  param('userId').notEmpty().withMessage('User ID is required')
+], async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Verify that the requesting user is the owner or an admin
+    if (req.user.uid !== userId && !req.user.admin) {
+      return res.status(403).json({
+        success: false,
+        error: 'Unauthorized access'
+      });
+    }
+    
+    const snapshot = await db.collection('listings')
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const cars = [];
+    snapshot.forEach(doc => {
+      cars.push({ id: doc.id, ...doc.data() });
+    });
+    
+    res.status(200).json({
+      success: true,
+      count: cars.length,
+      data: cars
+    });
+  } catch (error) {
+    console.error('Error fetching user car listings:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server error while fetching user listings'
+    });
+  }
+});
+
 module.exports = router;

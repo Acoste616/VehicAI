@@ -35,7 +35,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'], // Vite default port and React default port
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 app.use(express.json());
 app.use(morgan('dev')); // Logowanie HTTP
 
@@ -78,7 +83,15 @@ app.use((err, req, res, next) => {
 });
 
 // Uruchomienie serwera
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  try {
+    // Test połączenia z Firebase
+    const testUser = await auth.getUserByEmail('test@example.com').catch(() => null);
+    console.log('\x1b[32m%s\x1b[0m', 'Firebase Admin SDK zainicjalizowany poprawnie');
+  } catch (error) {
+    console.error('\x1b[31m%s\x1b[0m', 'Błąd inicjalizacji Firebase Admin SDK:', error.message);
+  }
+  
   console.log(`Serwer uruchomiony na porcie ${PORT} w trybie ${process.env.NODE_ENV || 'development'}`);
   console.log(`Otwórz w przeglądarce: http://localhost:${PORT}`);
 });

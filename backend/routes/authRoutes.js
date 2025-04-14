@@ -234,4 +234,115 @@ router.post('/verify-email', verifyToken, async (req, res) => {
   }
 });
 
+/**
+ * POST /auth/register
+ * Register a new user
+ */
+router.post('/register', [
+  body('email').isEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+  body('displayName').optional().trim(),
+  body('phoneNumber').optional()
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false, 
+        errors: errors.array() 
+      });
+    }
+
+    const { email, password, displayName, phoneNumber } = req.body;
+
+    // Create user in Firebase Auth
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName,
+      phoneNumber
+    });
+
+    // Create user document in Firestore
+    const timestamp = admin.firestore.FieldValue.serverTimestamp();
+    const userData = {
+      uid: userRecord.uid,
+      email,
+      displayName,
+      phoneNumber,
+      emailVerified: false,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+
+    await db.collection('users').doc(userRecord.uid).set(userData);
+
+    // Generate custom token for immediate login
+    const token = await auth.createCustomToken(userRecord.uid);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        token,
+        user: userData
+      }
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Registration failed'
+    });
+  }
+});
+
+/**
+ * POST /auth/login
+ * Login user and return JWT token
+ */
+router.post('/login', [
+  body('email').isEmail().withMessage('Please provide a valid email'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
+], async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    // Sign in with Firebase Auth
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const user = userCredential.user;
+    
+    // Get custom claims and user data
+    const token = await user.getIdToken();
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    
+    let userData = {
+      uid: user.uid,
+      email: user.email,
+      emailVerified: user.emailVerified
+    };
+    
+    if (userDoc.exists) {
+      userData = {
+        ...userData,
+        ...userDoc.data()
+      };
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        user: userData,
+        token
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(401).json({
+      success: false,
+      error: 'Invalid email or password'
+    });
+  }
+});
+
 module.exports = router;
